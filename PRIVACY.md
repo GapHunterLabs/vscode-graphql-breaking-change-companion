@@ -15,9 +15,11 @@ telemetry, no crash reports, no personally identifiable information.
 ## Network access
 
 **None.** GraphQL Schema Breaking-Change Companion makes zero network calls during normal operation.
-Every check runs entirely in-process, inside your editor, against
-files already open or on disk in your workspace. Nothing you open,
-select, or type is ever sent anywhere.
+Every check runs against files already open or on disk in your
+workspace — comparing a schema file to its previous revision via a
+local `git show` call (never a network operation; `git show` reads only
+your local repository history). Nothing you open, select, or type is
+ever sent anywhere.
 
 ## Third parties
 
