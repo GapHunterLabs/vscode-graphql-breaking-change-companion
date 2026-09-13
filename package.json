@@ -2,7 +2,7 @@
   "name": "graphql-breaking-change-companion",
   "displayName": "GraphQL Schema Breaking-Change Companion",
   "description": "Diffs a GraphQL SDL file against its git baseline (HEAD) and flags breaking changes -- removed types/fields/enum values, changed field types. No data leaves your editor.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "GapHunterLabs",
   "icon": "images/icon.png",
   "license": "Apache-2.0",
