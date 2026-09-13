@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { parseSchema, findBreakingChanges } from './schemaDiff';
+import { recordHit } from './reviewPrompt';
 
 const execFileAsync = promisify(execFile);
 
@@ -22,7 +23,7 @@ async function readGitBaseline(workspaceRoot: string, relativePath: string): Pro
   }
 }
 
-async function checkBreakingChanges(): Promise<void> {
+async function checkBreakingChanges(context: vscode.ExtensionContext): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
     void vscode.window.showErrorMessage('GraphQL Schema Breaking-Change Companion: open a .graphql/.gql file first.');
@@ -67,6 +68,12 @@ async function checkBreakingChanges(): Promise<void> {
     const diagnostic = new vscode.Diagnostic(range, change.message, vscode.DiagnosticSeverity.Warning);
     diagnostic.source = 'GraphQL Schema Breaking-Change Companion';
     diagnostic.code = change.kind;
+    // Dedup by document + the change's own message (unique per
+    // type/field/enum-value involved) rather than by line -- every
+    // diagnostic here is anchored to line 0 (see comment above), so a
+    // line-based key would collapse all distinct breaking changes in
+    // the same file into one.
+    recordHit(context, `${document.uri.toString()}:${change.kind}:${change.message}`);
     return diagnostic;
   });
   diagnostics.set(document.uri, diags);
@@ -83,7 +90,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(diagnostics);
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('graphqlBreakingChangeCompanion.check', () => void checkBreakingChanges()),
+    vscode.commands.registerCommand('graphqlBreakingChangeCompanion.check', () => void checkBreakingChanges(context)),
     vscode.workspace.onDidCloseTextDocument((document) => diagnostics.delete(document.uri)),
   );
 }
